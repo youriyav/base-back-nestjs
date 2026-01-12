@@ -1,0 +1,1 @@
+init config nestjs app with auth and migrations
