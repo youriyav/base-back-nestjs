@@ -41,8 +41,6 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('auth', 'Authentication endpoints')
     .addTag('users', 'User management endpoints')
-    .addTag('gyms', 'Gym management endpoints')
-    .addTag('members', 'Member management endpoints')
     .addBearerAuth()
     .build();
 

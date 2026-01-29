@@ -8,7 +8,6 @@ import {
   MinLength,
   IsEnum,
 } from 'class-validator';
-import { ADMIN_ROLES } from '../../../shared/enums/admin-roles';
 import { USER_ROLES } from '../../../shared/enums/user-roles';
 
 export class CreateUserDto {

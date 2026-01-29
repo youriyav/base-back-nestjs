@@ -5,10 +5,11 @@ import { User } from './users.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { BaseService } from '@shared/services/base.service';
 //import { USER_ROLES } from '@shared/enums/user-roles';
 
 @Injectable()
-export class UsersService {
+export class UsersService extends BaseService<User> {
   async findAll(): Promise<Partial<User>[]> {
     const users = await this.userRepository.find();
 
@@ -22,7 +23,9 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) {
+    super(userRepository);
+  }
 
   async create(createUserDto: CreateUserDto): Promise<Partial<User>> {
     const existingUser = await this.userRepository.findOne({
@@ -34,13 +37,12 @@ export class UsersService {
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-    const user = this.userRepository.create({
+    const savedUser = await this.userRepository.save({
       ...createUserDto,
       password: hashedPassword,
     });
 
-    const savedUser = await this.userRepository.save(user);
+    //const savedUser = await this.userRepository.save(user);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = savedUser;

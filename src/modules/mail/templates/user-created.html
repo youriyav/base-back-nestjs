@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Votre compte a ete cree</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333333;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .email-wrapper {
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        padding: 30px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .greeting {
+        font-size: 24px;
+        color: #3b82f6;
+        margin-bottom: 20px;
+      }
+      .message {
+        font-size: 16px;
+        color: #555555;
+        margin-bottom: 20px;
+      }
+      .highlight-box {
+        background: linear-gradient(135deg, #f0f7ff 0%, #e0efff 100%);
+        border-left: 4px solid #3b82f6;
+        border-radius: 0 8px 8px 0;
+        padding: 20px 25px;
+        margin: 25px 0;
+      }
+      .highlight-box .app-name {
+        font-size: 22px;
+        color: #3b82f6;
+        font-weight: 700;
+        margin: 0 0 5px 0;
+      }
+      .highlight-box .subtitle {
+        color: #666666;
+        margin: 0;
+        font-size: 14px;
+      }
+      .cta-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        padding: 14px 30px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+      }
+      .credentials-box {
+        background-color: #e8f5e9;
+        border: 1px solid #c8e6c9;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+      }
+      .credentials-box h4 {
+        color: #2e7d32;
+        margin-top: 0;
+        font-size: 16px;
+      }
+      .credentials-box .credential-item {
+        background-color: #ffffff;
+        border-radius: 4px;
+        padding: 10px 15px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      .credentials-box .label {
+        color: #666666;
+        font-size: 12px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .warning-box {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        border-radius: 6px;
+        padding: 15px 20px;
+        margin: 25px 0;
+      }
+      .warning-box p {
+        margin: 0;
+        color: #856404;
+        font-size: 14px;
+      }
+      .steps-list {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px 25px;
+        margin: 25px 0;
+      }
+      .steps-list h4 {
+        color: #333333;
+        margin-top: 0;
+      }
+      .steps-list ol {
+        margin: 0;
+        padding-left: 20px;
+        color: #555555;
+      }
+      .steps-list li {
+        margin-bottom: 10px;
+      }
+      .footer {
+        background-color: #f8f8f8;
+        padding: 20px 30px;
+        text-align: center;
+        font-size: 14px;
+        color: #888888;
+      }
+      .footer a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="email-wrapper">
+        <div class="header">
+          <h1>Bienvenue !</h1>
+        </div>
+
+        <div class="content">
+          <p class="greeting">Bonjour {{ firstName }},</p>
+
+          <p class="message">
+            Votre compte a ete cree sur <strong>{{ appName }}</strong>.
+          </p>
+
+          <div class="highlight-box">
+            <p class="app-name">{{ appName }}</p>
+            <p class="subtitle">Votre espace est pret</p>
+          </div>
+
+          <p class="message">
+            Vous pouvez des maintenant acceder a la plateforme.
+          </p>
+
+          <div style="text-align: center">
+            <a href="{{ loginUrl }}" class="cta-button">Acceder a mon espace</a>
+          </div>
+
+          <div class="steps-list">
+            <h4>Prochaines etapes :</h4>
+            <ol>
+              <li>Connectez-vous a votre compte avec vos identifiants</li>
+              <li>Explorez le tableau de bord et les fonctionnalites</li>
+              <li>Contactez votre administrateur si vous avez des questions</li>
+            </ol>
+          </div>
+
+          <div class="warning-box">
+            <p>
+              <strong>Important :</strong> Si vous n'avez pas demande cet acces, veuillez
+              contacter immediatement l'administrateur.
+            </p>
+          </div>
+
+          <p class="message">
+            Bienvenue !<br />
+            <strong>L'equipe {{ appName }}</strong>
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>
+            Cet email a ete envoye car votre compte a ete cree sur {{ appName }}.
+          </p>
+          <p>&copy; 2025 {{ appName }}. Tous droits reserves.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
