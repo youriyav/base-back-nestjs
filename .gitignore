@@ -35,12 +35,12 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# dotenv environment variable files — block any .env variant (including
+# accidental copies like ".env copy.example") except the sanitized templates
+# that are meant to be committed.
+.env*
+!.env.example
+!.env.test
 
 # temp directory
 .temp

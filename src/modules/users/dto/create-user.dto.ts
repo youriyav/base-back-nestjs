@@ -5,10 +5,14 @@ import {
   IsEmail,
   IsBoolean,
   IsOptional,
-  MinLength,
   IsEnum,
+  MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { USER_ROLES } from '../../../shared/enums/user-roles';
+
+/** SERVER/CASHIER accounts get a server-generated 4-digit access code instead — no password field required from the client. */
+const MOBILE_PIN_ROLES: USER_ROLES[] = [USER_ROLES.SERVER, USER_ROLES.CASHIER];
 
 export class CreateUserDto {
   @ApiProperty({
@@ -27,13 +31,15 @@ export class CreateUserDto {
   @IsString()
   last_name: string;
 
-  @ApiProperty({
-    description: 'User email address',
+  @ApiPropertyOptional({
+    description:
+      'User email address. Not used for SERVER/CASHIER roles — those only need phone + access code.',
     example: 'john.doe@example.com',
   })
+  @ValidateIf((dto) => !MOBILE_PIN_ROLES.includes(dto.role))
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({
     description: 'User phone number',
@@ -43,15 +49,17 @@ export class CreateUserDto {
   @IsString()
   phone: string;
 
-  @ApiProperty({
-    description: 'User password',
+  @ApiPropertyOptional({
+    description:
+      'User password (min 8 chars). Not used for SERVER/CASHIER roles — those get a server-generated 4-digit access code instead.',
     example: 'SecurePassword123!',
     minLength: 8,
   })
+  @ValidateIf((dto) => !MOBILE_PIN_ROLES.includes(dto.role))
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-  password: string;
+  password?: string;
 
   @ApiPropertyOptional({
     description: 'User address',

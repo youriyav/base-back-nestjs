@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nouvelle demande de démo</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333333;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .email-wrapper {
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #e8850f 0%, #a63b12 100%);
+        padding: 30px 20px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        margin: 0;
+        font-size: 26px;
+        font-weight: 700;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .message {
+        font-size: 16px;
+        color: #555555;
+        margin-bottom: 20px;
+      }
+      .details-box {
+        background-color: #fbf6ec;
+        border-left: 4px solid #e8850f;
+        border-radius: 0 8px 8px 0;
+        padding: 20px 25px;
+        margin: 25px 0;
+      }
+      .details-box .row {
+        margin: 0 0 10px 0;
+        font-size: 15px;
+      }
+      .details-box .row:last-child {
+        margin-bottom: 0;
+      }
+      .details-box .label {
+        color: #5b5245;
+        font-size: 13px;
+        display: block;
+      }
+      .details-box .value {
+        color: #241c15;
+        font-weight: 600;
+      }
+      .footer {
+        background-color: #f8f8f8;
+        padding: 20px 30px;
+        text-align: center;
+        font-size: 14px;
+        color: #888888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="email-wrapper">
+        <div class="header">
+          <h1>Nouvelle demande de démo</h1>
+        </div>
+
+        <div class="content">
+          <p class="message">
+            Un prospect vient de soumettre une demande de démo sur la landing page GestiRestoPro.
+          </p>
+
+          <div class="details-box">
+            <p class="row">
+              <span class="label">Restaurant</span>
+              <span class="value">{{ restaurantName }}</span>
+            </p>
+            <p class="row">
+              <span class="label">Contact</span>
+              <span class="value">{{ contactName }}</span>
+            </p>
+            <p class="row">
+              <span class="label">Téléphone</span>
+              <span class="value">{{ phone }}</span>
+            </p>
+            <p class="row">
+              <span class="label">Email</span>
+              <span class="value">{{ email }}</span>
+            </p>
+            <p class="row">
+              <span class="label">Ville</span>
+              <span class="value">{{ city }}</span>
+            </p>
+            <p class="row">
+              <span class="label">Formule souhaitée</span>
+              <span class="value">{{ desiredPlan }}</span>
+            </p>
+            <p class="row">
+              <span class="label">Message</span>
+              <span class="value">{{ message }}</span>
+            </p>
+          </div>
+
+          <p class="message">
+            Connectez-vous au back-office pour suivre et mettre à jour le statut de cette demande.
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>&copy; 2026 GestiRestoPro. Notification interne automatique.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

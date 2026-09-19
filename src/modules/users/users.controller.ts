@@ -6,7 +6,8 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
+  UsePipes,
+  ValidationPipe,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -14,22 +15,19 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@ne
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
 import { ApiResponse as CustomApiResponse } from '@shared/types';
 import { User } from './users.entity';
-//import { User as UserDecorator } from '../auth/decorators/user.decorator';
-import { RolesGuard } from '@modules/auth/guards/roles.guard';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { USER_ROLES } from '@shared/enums/user-roles';
+import { CrossTenant } from '@shared/tenant-context';
 
 @ApiTags('users')
 @Controller('users')
+@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.OWNER)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
@@ -52,15 +50,13 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.OWNER)
+  @Roles(USER_ROLES.OWNER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Return all users.' })
+  @ApiOperation({ summary: "Get all users in the caller's own restaurant" })
+  @ApiResponse({ status: 200, description: 'Return all users in the current restaurant.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden. Admin,owner, access required.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Owner access required.' })
   async findAll(): Promise<CustomApiResponse<Partial<User>[]>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const users = await this.usersService.findAll();
     return {
       success: true,
@@ -68,15 +64,30 @@ export class UsersController {
     };
   }
 
+  @Get('all')
+  @Roles(USER_ROLES.SUPER_ADMIN)
+  @CrossTenant()
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all users across every restaurant (Super Admin only)' })
+  @ApiResponse({ status: 200, description: 'Return all users across every restaurant.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Super Admin access required.' })
+  async findAllAcrossAllRestaurants(): Promise<CustomApiResponse<Partial<User>[]>> {
+    const users = await this.usersService.findAllAcrossAllRestaurants();
+    return {
+      success: true,
+      data: users,
+    };
+  }
+
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a user by id' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({ status: 200, description: 'Return the user.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async findOne(@Param('id') id: string): Promise<CustomApiResponse<User>> {
+  async findOne(@Param('id') id: string): Promise<CustomApiResponse<Partial<User>>> {
     const user = await this.usersService.findOne(id);
     return {
       success: true,
@@ -84,8 +95,27 @@ export class UsersController {
     };
   }
 
+  @Get(':id/access-code')
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.OWNER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Reveal a SERVER/CASHIER user's 4-digit mobile access code" })
+  @ApiParam({ name: 'id', description: 'User ID (UUID)' })
+  @ApiResponse({ status: 200, description: 'Return the access code.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Super Admin or Owner access required.' })
+  @ApiResponse({ status: 404, description: 'User not found or has no access code.' })
+  async getAccessCode(
+    @Param('id') id: string,
+  ): Promise<CustomApiResponse<{ accessCode: string | null }>> {
+    const data = await this.usersService.getAccessCode(id);
+    return {
+      success: true,
+      data,
+    };
+  }
+
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.OWNER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
@@ -99,7 +129,7 @@ export class UsersController {
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<CustomApiResponse<User>> {
+  ): Promise<CustomApiResponse<Partial<User>>> {
     const user = await this.usersService.update(id, updateUserDto);
     return {
       success: true,
@@ -108,17 +138,17 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Roles(USER_ROLES.SUPER_ADMIN, USER_ROLES.OWNER)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a user (Admin only)' })
+  @ApiOperation({ summary: 'Delete a user (Super Admin or Owner only)' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({
     status: 204,
     description: 'The user has been successfully deleted.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @ApiResponse({ status: 403, description: 'Forbidden. Admin access required.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Super Admin or Owner access required.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
   async remove(@Param('id') id: string): Promise<void> {
     await this.usersService.remove(id);

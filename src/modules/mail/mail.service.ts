@@ -124,6 +124,47 @@ export class MailService {
   }
 
   /**
+   * Enqueue an internal notification email for a new demo request (prospect)
+   * Recipient is configurable via the PROSPECT_NOTIFICATION_EMAIL env var.
+   * If unset, the notification is skipped (logged) rather than failing the request.
+   */
+  async sendDemoRequestNotification(data: {
+    restaurantName: string;
+    contactName: string;
+    phone: string;
+    email?: string;
+    city: string;
+    desiredPlan: string;
+    message?: string;
+  }): Promise<void> {
+    const notificationEmail = this.configService.get<string>('PROSPECT_NOTIFICATION_EMAIL');
+
+    if (!notificationEmail) {
+      this.logger.warn(
+        'PROSPECT_NOTIFICATION_EMAIL is not configured — skipping demo request notification email.',
+      );
+      return;
+    }
+
+    await this.enqueueMail({
+      to: notificationEmail,
+      subject: `Nouvelle demande de démo — ${data.restaurantName}`,
+      template: 'demo-request',
+      params: {
+        restaurantName: data.restaurantName,
+        contactName: data.contactName,
+        phone: data.phone,
+        email: data.email || '—',
+        city: data.city,
+        desiredPlan: data.desiredPlan,
+        message: data.message || 'Aucun message.',
+      },
+    });
+
+    this.logger.log(`Demo request notification queued for ${notificationEmail}`);
+  }
+
+  /**
    * Get queue health status
    * @returns Queue metrics for monitoring
    */

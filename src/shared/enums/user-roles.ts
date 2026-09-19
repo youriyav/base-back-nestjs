@@ -5,4 +5,6 @@ export enum USER_ROLES {
   OWNER = 'owner',
   MEMBER = 'member',
   DEFAULT = 'user',
+  SERVER = 'server',
+  CASHIER = 'cashier',
 }

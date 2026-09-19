@@ -7,25 +7,21 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { MinioService } from './minio.service';
-import { User } from '@modules/auth/decorators';
-import { User as UserEntity } from '@modules/users/users.entity';
 import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
 import { ApiResponse as SharedApiResponse } from '@shared/types';
+import { TenantContextService } from '@shared/tenant-context/tenant-context.service';
 
 @ApiTags('Storage')
 @Controller('storage')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class StorageController {
-  constructor(private readonly minioService: MinioService) {}
+  constructor(
+    private readonly minioService: MinioService,
+    private readonly tenantContext: TenantContextService,
+  ) {}
 
   /**
    * Get presigned URL for file download
@@ -67,7 +63,6 @@ export class StorageController {
   async getPresignedUrl(
     @Query('objectKey') objectKey: string,
     @Query('expiry') expiry?: string,
-    @User() user?: UserEntity,
   ): Promise<
     SharedApiResponse<{
       url: string;
@@ -96,7 +91,11 @@ export class StorageController {
     const maxExpiry = 7 * 24 * 60 * 60;
     const finalExpiry = Math.min(expirySeconds, maxExpiry);
 
-    const url = await this.minioService.getPresignedUrl(user!.id, objectKey, finalExpiry);
+    const url = await this.minioService.getPresignedUrl(
+      this.tenantContext.getRestaurantIdOrThrow(),
+      objectKey,
+      finalExpiry,
+    );
 
     return {
       success: true,
@@ -148,7 +147,6 @@ export class StorageController {
   async getPresignedUploadUrl(
     @Query('objectKey') objectKey: string,
     @Query('expiry') expiry?: string,
-    @User() user?: UserEntity,
   ): Promise<
     SharedApiResponse<{
       url: string;
@@ -177,7 +175,11 @@ export class StorageController {
     const maxExpiry = 24 * 60 * 60;
     const finalExpiry = Math.min(expirySeconds, maxExpiry);
 
-    const url = await this.minioService.getPresignedPutUrl(user!.id, objectKey, finalExpiry);
+    const url = await this.minioService.getPresignedPutUrl(
+      this.tenantContext.getRestaurantIdOrThrow(),
+      objectKey,
+      finalExpiry,
+    );
 
     return {
       success: true,
