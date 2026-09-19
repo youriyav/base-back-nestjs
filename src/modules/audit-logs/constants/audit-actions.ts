@@ -25,24 +25,16 @@ export const USER_ACTIONS = {
   RESET_USER_PASSWORD: 'RESET_USER_PASSWORD',
 } as const;
 
-// Restaurant Management Actions
-export const RESTAURANT_ACTIONS = {
-  IMPERSONATE_START: 'IMPERSONATE_START',
-  IMPERSONATE_END: 'IMPERSONATE_END',
-} as const;
-
 // Entity Types
 export const AUDIT_ENTITIES = {
   USER: 'USER',
   AUTH: 'AUTH',
-  RESTAURANT: 'RESTAURANT',
 } as const;
 
 // All actions combined for type safety
 export const AUDIT_ACTIONS = {
   ...AUTH_ACTIONS,
   ...USER_ACTIONS,
-  ...RESTAURANT_ACTIONS,
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

@@ -19,10 +19,8 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { LoginPhoneDto } from './dto/login-phone.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -34,7 +32,6 @@ import { USER_ROLES } from '@shared/enums/user-roles';
 import { ApiResponse as CustomApiResponse, LoginResponse } from '@shared/types';
 import { Audit } from '@modules/audit-logs/decorators';
 import { AUTH_ACTIONS, AUDIT_ENTITIES } from '@modules/audit-logs/constants';
-import { Public } from '@shared/tenant-context';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -42,7 +39,6 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @Public()
   @HttpCode(HttpStatus.OK)
   @Audit({ action: AUTH_ACTIONS.LOGIN, entity: AUDIT_ENTITIES.AUTH })
   @ApiOperation({ summary: 'User login' })
@@ -78,46 +74,7 @@ export class AuthController {
     };
   }
 
-  @Post('login-phone')
-  @Public()
-  @UseGuards(ThrottlerGuard)
-  @HttpCode(HttpStatus.OK)
-  @Audit({ action: AUTH_ACTIONS.LOGIN, entity: AUDIT_ENTITIES.AUTH })
-  @ApiOperation({ summary: 'Mobile login with phone number + 4-digit access code' })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful. Returns access token and refresh token.',
-    schema: {
-      type: 'object',
-      properties: {
-        access_token: { type: 'string' },
-        refresh_token: { type: 'string' },
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            email: { type: 'string' },
-            first_name: { type: 'string' },
-            last_name: { type: 'string' },
-            isAdmin: { type: 'boolean' },
-            role: { type: 'string' },
-          },
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Invalid phone number or code.' })
-  @ApiResponse({ status: 429, description: 'Too many attempts, try again later.' })
-  async loginPhone(@Body() loginPhoneDto: LoginPhoneDto): Promise<CustomApiResponse<LoginResponse>> {
-    const data = await this.authService.loginWithPhone(loginPhoneDto.phone, loginPhoneDto.code);
-    return {
-      success: true,
-      data: data,
-    };
-  }
-
   @Post('refresh')
-  @Public()
   @HttpCode(HttpStatus.OK)
   @Audit({ action: AUTH_ACTIONS.REFRESH_TOKEN, entity: AUDIT_ENTITIES.AUTH })
   @ApiOperation({ summary: 'Refresh access token' })
@@ -227,7 +184,6 @@ export class AuthController {
    * User clicks link from email and submits new password
    */
   @Post('reset-password')
-  @Public()
   @HttpCode(HttpStatus.OK)
   @Audit({ action: AUTH_ACTIONS.RESET_PASSWORD, entity: AUDIT_ENTITIES.AUTH })
   @ApiOperation({
@@ -252,7 +208,6 @@ export class AuthController {
    * Validate reset token (optional - for frontend to check before showing form)
    */
   @Get('reset-password/validate')
-  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Validate password reset token',

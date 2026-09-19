@@ -42,7 +42,6 @@ export class AuthService {
     // Find user by email
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: ['restaurant'],
     });
 
     if (!user) {
@@ -55,44 +54,15 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
-    return this.issueLoginResponse(user);
-  }
-
-  /**
-   * Mobile login: phone + 4-digit access code instead of email + password.
-   * Generic failure message in every case (unknown phone, no access code for
-   * this user, or mismatch) — unlike login()'s email lookup, this never
-   * distinguishes "not found" from "wrong code" so a caller can't enumerate
-   * valid phone numbers.
-   */
-  async loginWithPhone(phone: string, code: string): Promise<LoginResponse> {
-    const user = await this.userRepository.findOne({
-      where: { phone },
-      relations: ['restaurant'],
-    });
-
-    if (!user || !user.accessCode || user.accessCode !== code) {
-      throw new UnauthorizedException('Invalid phone number or code.');
-    }
-
-    return this.issueLoginResponse(user);
-  }
-
-  /**
-   * Included for refreshToken()/debuggability, but TenantContextGuard never
-   * trusts this claim directly — it's populated from the DB read in
-   * JwtStrategy.validate() so a stale token can't assert a stale tenant.
-   */
-  private issueLoginResponse(user: User): LoginResponse {
+    //get user role
     const role = this.getUserRole(user);
 
+    // Generate tokens
     const payload = {
       sub: user.id,
       email: user.email,
       isAdmin: user.isAdmin,
-      role,
-      restaurantId: user.restaurantId ?? null,
+      role: role,
     };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -115,43 +85,7 @@ export class AuthService {
         isAdmin: user.isAdmin,
         role,
       },
-      restaurant: user.restaurant
-        ? {
-            id: user.restaurant.id,
-            name: user.restaurant.name,
-            address: user.restaurant.address ?? null,
-            phone: user.restaurant.phone ?? null,
-          }
-        : null,
     };
-  }
-
-  /**
-   * Mint a short-lived access token letting a SUPER_ADMIN view the app as a
-   * given restaurant. The admin's own identity (`sub`, `role`, `restaurantId`)
-   * is signed unchanged — only `impersonatedRestaurantId` is added, which
-   * TenantContextGuard resolves in preference to the admin's own restaurantId
-   * (null). There is no refresh token: an impersonation session is meant to
-   * be short and is never silently renewed.
-   */
-  impersonate(
-    admin: Pick<User, 'id' | 'email' | 'isAdmin' | 'role' | 'restaurantId'>,
-    restaurantId: string,
-  ): { access_token: string } {
-    const payload = {
-      sub: admin.id,
-      email: admin.email,
-      isAdmin: admin.isAdmin,
-      role: admin.role,
-      restaurantId: admin.restaurantId ?? null,
-      impersonatedRestaurantId: restaurantId,
-    };
-
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION') || '1h',
-    });
-
-    return { access_token: accessToken };
   }
 
   async validateUser(userId: string): Promise<User> {
@@ -177,14 +111,41 @@ export class AuthService {
       const user = await this.userRepository.findOne({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         where: { id: payload.sub },
-        relations: ['restaurant'],
       });
 
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
 
-      return this.issueLoginResponse(user);
+      // Generate new tokens
+      const newPayload = {
+        sub: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        role: user.role,
+      };
+
+      const accessToken = this.jwtService.sign(newPayload, {
+        expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRATION') || '1h',
+      });
+
+      const newRefreshToken = this.jwtService.sign(newPayload, {
+        secret: this.configService.get('JWT_REFRESH_SECRET') || 'refresh-secret-key',
+        expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRATION') || '7d',
+      });
+
+      return {
+        access_token: accessToken,
+        refresh_token: newRefreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          isAdmin: user.isAdmin,
+          role: this.getUserRole(user),
+        },
+      };
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -225,13 +186,15 @@ export class AuthService {
   }
 
   getUserRole(user: User): USER_ROLES {
+    const roleMap: Record<string, USER_ROLES> = {
+      super_admin: USER_ROLES.SUPER_ADMIN,
+      owner: USER_ROLES.OWNER,
+      default: USER_ROLES.DEFAULT,
+    };
     if (user.isAdmin) {
-      return USER_ROLES.SUPER_ADMIN;
+      return roleMap['super_admin'];
     }
-    if (user.role && Object.values(USER_ROLES).includes(user.role)) {
-      return user.role;
-    }
-    return USER_ROLES.DEFAULT;
+    return roleMap[user.role] || USER_ROLES.DEFAULT;
   }
 
   /**
